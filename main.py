@@ -2,7 +2,6 @@ import board
 import neopixel
 from flask import Flask, request, jsonify
 import time
-import colorsys
 import threading
 
 app = Flask(__name__)
@@ -191,7 +190,6 @@ def set_color_endpoint():
         color = tuple(data['color'])  # Color should be a list of RGB values, e.g., [255, 0, 0] for red
         
         stop_current_animation()  # Stop any active animation
-        turn_off()  # Turn off the LEDs to clear them
         set_color(color)  # Set the new color
         
         return jsonify({"message": "Color set successfully"})
@@ -202,10 +200,11 @@ def set_color_endpoint():
 def turn_off_endpoint():
     try:
         stop_current_animation()
-        time.sleep(0.2)
+        time.sleep(0.4)
         turn_off()
-        time.sleep(0.2)
+        time.sleep(0.1)
         turn_off()  # Doing it again to make sure (sometimes a color stays on)
+        time.sleep(0.5)
         return jsonify({"message": "LEDs turned off"})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
