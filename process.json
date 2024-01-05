@@ -1,10 +1,12 @@
 {
-    "apps": [{
-        "name": "led-control",
-        "script": "sudo python3 /home/logan/led-control/main.py",
-        "instances": "1",
-        "wait_ready": true,
-        "autorestart": true,
-        "max_restarts": 10
-    }]
+  "apps": [
+    {
+      "name": "led-control",
+      "script": "sudo python3 /path/to/your/main.py",
+      "instances": "1",
+      "wait_ready": true,
+      "autorestart": true,
+      "max_restarts": 10
+    }
+  ]
 }
