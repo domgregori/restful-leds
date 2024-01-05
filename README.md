@@ -1,4 +1,4 @@
-# Pi LED Controller
+# Pi LED Controller Web API
 
 This is a Python program for the Raspberry Pi that allows you to control a strip of WS2812B (NeoPixel) addressable LEDs using a REST API. Any Raspberry Pi model will work, I like to use the Pi Zero W because it's cheap, small, and has built-in WiFi. The processing requirements for this program are very low, so even the weak Pi Zero W can handle it just fine, but installing things will take a little more patience :)
 
