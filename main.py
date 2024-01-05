@@ -3,6 +3,7 @@ Author: Logan Steffen
 Version: v1.0.0
 Started: 11/01/2023
 Last Updated: 01/05/2024
+License: MIT
 Program: WS2812B(neopixel) LED Strip Control Application for Raspberry Pi
 Description: This is a simple Python Flask application that controls an addressable RGB LED strip based on API requests.
               The API endpoints are as follows:
@@ -20,6 +21,7 @@ Description: This is a simple Python Flask application that controls an addressa
                 -> Example request body: {"colors": [[255, 0, 0], [0, 255, 0], [0, 0, 255]]} (for red, green, and blue)
               - /pulse_effect: Starts a pulse effect with the specified color
                 -> Example request body: {"color": [255, 0, 0]} (for red)
+              - /help: Returns documentation of available endpoints and how to use them
 Note: 
 The standard behavior is that the strip will continue to always display the last color/effect/brightness until a new one is set.
 There are no time outs, temporary effects, or anything like that. You want it off after a certain amount of time? Send a request to turn it off at that time.
