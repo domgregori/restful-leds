@@ -49,8 +49,10 @@ import threading
 app = Flask(__name__)
 
 # Define the LED strip configuration
-NUM_PIXELS = 20  # Updated to 20 LEDs
-pixels = neopixel.NeoPixel(board.D18, NUM_PIXELS, auto_write=False)
+# TODO: YOU NEED TO SET THIS TO THE CORRECT NUMBER OF PIXELS IN YOUR STRIP
+NUM_PIXELS = 20
+DATA_PIN = board.D18
+pixels = neopixel.NeoPixel(DATA_PIN, NUM_PIXELS, auto_write=False)
 
 # Global variables to control animations
 current_animation = None

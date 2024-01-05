@@ -16,12 +16,16 @@ sudo pip3 install flask adafruit-circuitpython-neopixel
 Clone the repository to your Raspberry Pi:
 
 ```bash
-git clone
+git clone https://github.com/EthyMoney/pi-neopixel-http-api-controller.git
 ```
+
+## Configuration
+
+You need to open the `main.py` file and set the `NUM_PIXELS` variable to the count of leds in your strip. You can also change the GPIO pin that the data pin of the strip is connected to by changing the `DATA_PIN` variable. This needs to be a PWM-capable pin like GPIO 12, GPIO 13, GPIO 18, GPIO 19. The default is GPIO pin 18, which is represented in the code as `board.D18`. You can find a list of GPIO pin numbers [here](https://www.raspberrypi.com/documentation/computers/os.html#gpio-and-the-40-pin-header).
 
 ## Hardware Setup
 
-Connect the data pin of the LED strip to GPIO pin 18 on the Raspberry Pi. Connect the ground pin of the LED strip to any ground pin on the Raspberry Pi **AND** the ground of the power supply. Yes, the strip should have a common ground with the Pi and power supply, you will have issues if you don't do this. Connect the power pin of the LED strip to a power supply of correct voltage for your strip, this is typically either 5v, 12v or 24v. Make sure your power supply has enough current to power your strip. Assuming 12v, you typically need 1 amp per meter of strip as a very general rule of thumb. For example, a 5 meter 12v strip would need a 5 amp 12v power supply.
+Connect the data pin of the LED strip to GPIO pin 18 on the Raspberry Pi (default), or whatever you changed it to. Connect the ground pin of the LED strip to any ground pin on the Raspberry Pi **AND** the ground of the power supply. Yes, the strip should have a common ground with the Pi and power supply, you will have issues if you don't do this. Connect the power pin of the LED strip to a power supply of correct voltage for your strip, this is typically either 5v, 12v or 24v. Make sure your power supply has enough current to power your strip. Assuming 12v, you typically need 1 amp per meter of strip as a very general rule of thumb. For example, a 5 meter 12v strip would need a 5 amp 12v power supply.
 
 ## Running the Program
 
