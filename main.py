@@ -1,4 +1,4 @@
-'''
+"""
 Author: Logan Steffen
 Version: v1.0.0
 Started: 11/01/2023
@@ -25,9 +25,7 @@ Description: This is a simple Python Flask application that controls an addressa
 Note: 
 The standard behavior is that the strip will continue to always display the last color/effect/brightness until a new one is set.
 There are no time outs, temporary effects, or anything like that. You want it off after a certain amount of time? Send a request to turn it off at that time.
-'''
-
-
+"""
 
 ######################################
 #              Imports               #
@@ -38,7 +36,6 @@ import neopixel
 from flask import Flask, request, jsonify
 import time
 import threading
-
 
 
 ######################################
@@ -62,10 +59,10 @@ animation_active = False
 current_brightness = 255  # Default to maximum brightness
 
 
-
 ######################################
 #          Helper Functions          #
 ######################################
+
 
 # Helper function for the initial flash used at startup to indicate that the program is running
 def initial_flash():
@@ -77,21 +74,23 @@ def initial_flash():
     # Flash blue once
     set_color((0, 0, 255))
     time.sleep(2)
-    turn_off() # light off until told otherwise by API request
-
+    turn_off()  # light off until told otherwise by API request
 
 
 ######################################
 #       LED Control Functions        #
 ######################################
-    
+
+
 def set_color(color):
     pixels.fill(color)
     pixels.show()
 
+
 def turn_off():
     pixels.fill((0, 0, 0))
     pixels.show()
+
 
 # This is the rainbow wave effect
 def rainbow_cycle(wait):
@@ -106,6 +105,7 @@ def rainbow_cycle(wait):
             pixels.show()
             time.sleep(wait)
 
+
 # Does the alternating colors animation by just calling set_color() with the specified colors
 def alternating_colors(color1, color2):
     global animation_active
@@ -116,11 +116,13 @@ def alternating_colors(color1, color2):
         set_color(color2)
         time.sleep(0.5)
 
+
 def set_brightness(brightness):
     global current_brightness
     current_brightness = brightness
     pixels.brightness = brightness / 255.0  # Set the brightness between 0 and 1
     pixels.show()
+
 
 def color_loop(colors):
     global current_brightness, animation_active
@@ -130,37 +132,39 @@ def color_loop(colors):
             set_color(color)
             time.sleep(1)
 
-def pulse_effect(color):
-  global current_brightness, animation_active
-  while animation_active:
-    for brightness in range(0, 256, 5):
-      if not animation_active:
-        set_brightness(255)  # Reset brightness to 100%
-        return  # Exit the function if animation is stopped
-      set_brightness(brightness)
-      set_color(color)
-      time.sleep(0.1)
-    for brightness in range(255, -1, -5):
-      if not animation_active:
-        set_brightness(255)  # Reset brightness to 100%
-        return  # Exit the function if animation is stopped
-      set_brightness(brightness)
-      set_color(color)
-      time.sleep(0.1)
-  set_brightness(255)  # Reset brightness to 100% after the pulse effect ends
 
+def pulse_effect(color):
+    global current_brightness, animation_active
+    while animation_active:
+        for brightness in range(0, 256, 5):
+            if not animation_active:
+                set_brightness(255)  # Reset brightness to 100%
+                return  # Exit the function if animation is stopped
+            set_brightness(brightness)
+            set_color(color)
+            time.sleep(0.1)
+        for brightness in range(255, -1, -5):
+            if not animation_active:
+                set_brightness(255)  # Reset brightness to 100%
+                return  # Exit the function if animation is stopped
+            set_brightness(brightness)
+            set_color(color)
+            time.sleep(0.1)
+    set_brightness(255)  # Reset brightness to 100% after the pulse effect ends
 
 
 ######################################
 #     Animation Helper Functions     #
 ######################################
-  
+
+
 # Gets called before starting any new animations to stop the current one if one is running
 def stop_current_animation():
     global current_animation, animation_active
     animation_active = False
     if current_animation is not None:
         current_animation.join()
+
 
 # Start the pulse effect in a separate thread
 def start_pulse_effect(color):
@@ -171,6 +175,7 @@ def start_pulse_effect(color):
     current_animation.daemon = True
     current_animation.start()
 
+
 # Start the color loop in a separate thread
 def start_color_loop(colors):
     global current_animation, animation_active
@@ -179,6 +184,7 @@ def start_color_loop(colors):
     current_animation = threading.Thread(target=color_loop, args=(colors,))
     current_animation.daemon = True
     current_animation.start()
+
 
 # Helper function for the rainbow wave effect, this is used to generate a smooth sequence of color values for the rainbow wave
 # This function is taken from the Adafruit example code for the NeoPixel library: https://learn.adafruit.com/adafruit-neopixel-uberguide/python-circuitpython
@@ -206,23 +212,26 @@ def wheel(pos):
     return (r, g, b)
 
 
-
 ######################################
 #           API Endpoints            #
 ######################################
 
-@app.route('/set_color', methods=['POST'])
+
+@app.route("/set_color", methods=["POST"])
 def set_color_endpoint():
     try:
         data = request.get_json()
-        color = tuple(data['color'])  # Color should be a list of RGB values, e.g., [255, 0, 0] for red
+        color = tuple(
+            data["color"]
+        )  # Color should be a list of RGB values, e.g., [255, 0, 0] for red
         stop_current_animation()  # Stop any active animation
         set_color(color)  # Set the new color
         return jsonify({"message": "Color set successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route('/turn_off', methods=['POST'])
+
+@app.route("/turn_off", methods=["POST"])
 def turn_off_endpoint():
     try:
         stop_current_animation()
@@ -235,7 +244,8 @@ def turn_off_endpoint():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route('/rainbow_wave', methods=['POST'])
+
+@app.route("/rainbow_wave", methods=["POST"])
 def rainbow_wave_endpoint():
     global current_animation, animation_active
     stop_current_animation()
@@ -246,106 +256,124 @@ def rainbow_wave_endpoint():
     current_animation.start()
     return jsonify({"message": "Rainbow wave activated"})
 
-@app.route('/alternating_colors', methods=['POST'])
+
+@app.route("/alternating_colors", methods=["POST"])
 def alternating_colors_endpoint():
     global current_animation, animation_active
     try:
         data = request.get_json()
-        color1 = tuple(data['color1'])
-        color2 = tuple(data['color2'])
+        color1 = tuple(data["color1"])
+        color2 = tuple(data["color2"])
         stop_current_animation()  # Stop any active animation
         animation_active = False  # Stop rainbow_wave animation
-        current_animation = threading.Thread(target=alternating_colors, args=(color1, color2))
+        current_animation = threading.Thread(
+            target=alternating_colors, args=(color1, color2)
+        )
         current_animation.daemon = True
         current_animation.start()
         return jsonify({"message": "Alternating colors activated"})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-    
-@app.route('/set_brightness', methods=['POST'])
+
+
+@app.route("/set_brightness", methods=["POST"])
 def set_brightness_endpoint():
     try:
         data = request.get_json()
-        brightness = int(data['brightness'])  # Brightness should be between 0 and 255
+        brightness = int(data["brightness"])  # Brightness should be between 0 and 255
         set_brightness(brightness)
         return jsonify({"message": "Brightness set successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route('/color_loop', methods=['POST'])
+
+@app.route("/color_loop", methods=["POST"])
 def color_loop_endpoint():
     try:
         data = request.get_json()
-        colors = [tuple(color) for color in data['colors']]  # List of colors to loop through
+        colors = [
+            tuple(color) for color in data["colors"]
+        ]  # List of colors to loop through
         start_color_loop(colors)
         return jsonify({"message": "Color loop started"})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-    
-@app.route('/pulse_effect', methods=['POST'])
+
+
+@app.route("/pulse_effect", methods=["POST"])
 def pulse_effect_endpoint():
     try:
         data = request.get_json()
-        color = tuple(data['color'])  # Color should be a list of RGB values, e.g., [255, 0, 0] for red
+        color = tuple(
+            data["color"]
+        )  # Color should be a list of RGB values, e.g., [255, 0, 0] for red
         start_pulse_effect(color)
         return jsonify({"message": "Pulse effect started"})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+
 # Route for unknown requests
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
 def unknown_endpoint(path):
-    return jsonify({"error": "Unknown endpoint or type, use the /help endpoint to get docs of available endpoints"}), 404
+    return (
+        jsonify(
+            {
+                "error": "Unknown endpoint or type, use the /help endpoint to get docs of available endpoints"
+            }
+        ),
+        404,
+    )
+
 
 # Route for help endpoint to return documentation of available endpoints and how to use them
-@app.route('/help')
+@app.route("/help")
 def help_endpoint():
-    return jsonify({
-        "message": "Here's the available endpoints. Note that all requests should be POST requests. All colors should be specified as RGB values, e.g., [255, 0, 0] for red. Set brightness values should be between 0 and 255 (like color values). The controller will always stay displaying the last color/effect/brightness until a new one is set.",
-        "endpoints": {
-            "/set_color": {
-                "description": "Sets the color of the LED strip",
-                "request body": {
-                    "color": [255, 0, 0]  # Red
-                }
+    return jsonify(
+        {
+            "message": "Here's the available endpoints. Note that all requests should be POST requests. All colors should be specified as RGB values, e.g., [255, 0, 0] for red. Set brightness values should be between 0 and 255 (like color values). The controller will always stay displaying the last color/effect/brightness until a new one is set.",
+            "endpoints": {
+                "/set_color": {
+                    "description": "Sets the color of the LED strip",
+                    "request body": {"color": [255, 0, 0]},  # Red
+                },
+                "/turn_off": {
+                    "description": "Turns off the LED strip",
+                    "request body": {},
+                },
+                "/rainbow_wave": {
+                    "description": "Starts a rainbow wave effect",
+                    "request body": {},
+                },
+                "/alternating_colors": {
+                    "description": "Alternates between the specified colors",
+                    "request body": {
+                        "color1": [255, 0, 0],  # Red
+                        "color2": [0, 255, 0],  # Green
+                    },
+                },
+                "/set_brightness": {
+                    "description": "Sets the brightness of the LED strip",
+                    "request body": {"brightness": 255},  # 100% brightness
+                },
+                "/color_loop": {
+                    "description": "Loops through the specified colors",
+                    "request body": {
+                        "colors": [
+                            [255, 0, 0],
+                            [0, 255, 0],
+                            [0, 0, 255],
+                        ]  # Red, green, and blue
+                    },
+                },
+                "/pulse_effect": {
+                    "description": "Starts a pulse effect with the specified color",
+                    "request body": {"color": [255, 0, 0]},  # Red
+                },
             },
-            "/turn_off": {
-                "description": "Turns off the LED strip",
-                "request body": {}
-            },
-            "/rainbow_wave": {
-                "description": "Starts a rainbow wave effect",
-                "request body": {}
-            },
-            "/alternating_colors": {
-                "description": "Alternates between the specified colors",
-                "request body": {
-                    "color1": [255, 0, 0],  # Red
-                    "color2": [0, 255, 0]  # Green
-                }
-            },
-            "/set_brightness": {
-                "description": "Sets the brightness of the LED strip",
-                "request body": {
-                    "brightness": 255  # 100% brightness
-                }
-            },
-            "/color_loop": {
-                "description": "Loops through the specified colors",
-                "request body": {
-                    "colors": [[255, 0, 0], [0, 255, 0], [0, 0, 255]]  # Red, green, and blue
-                }
-            },
-            "/pulse_effect": {
-                "description": "Starts a pulse effect with the specified color",
-                "request body": {
-                    "color": [255, 0, 0]  # Red
-                }
-            }
         }
-    })
-
+    )
 
 
 ######################################
@@ -353,8 +381,8 @@ def help_endpoint():
 ######################################
 
 # The entry point of the program, starts the Flask app and begins listening for endpoint requests
-if __name__ == '__main__':
-  # Run the initial flash to show we are up and running
-  initial_flash()
-  # Start the Flask app and begin listening for endpoint requests
-  app.run(host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    # Run the initial flash to show we are up and running
+    initial_flash()
+    # Start the Flask app and begin listening for endpoint requests
+    app.run(host="0.0.0.0", port=5000)
