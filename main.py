@@ -327,6 +327,12 @@ def unknown_endpoint(path):
     )
 
 
+# Route for ping endpoint to check if the server is running
+@app.route("/ping")
+def ping_endpoint():
+    return jsonify({"message": "pong"})
+
+
 # Route for help endpoint to return documentation of available endpoints and how to use them
 @app.route("/help")
 def help_endpoint():
@@ -370,6 +376,14 @@ def help_endpoint():
                 "/pulse_effect": {
                     "description": "Starts a pulse effect with the specified color",
                     "request body": {"color": [255, 0, 0]},  # Red
+                },
+                "/help": {
+                    "description": "Returns documentation of available endpoints and how to use them (what you are seeing now)",
+                    "request body": {},
+                },
+                "/ping": {
+                    "description": 'Returns {"message": "pong"} JSON response to check if the server is running',
+                    "request body": {},
                 },
             },
         }
