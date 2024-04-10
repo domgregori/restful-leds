@@ -1,8 +1,8 @@
 """
 Author: Logan Steffen
-Version: v1.0.0
+Version: v1.1.0
 Started: 11/01/2023
-Last Updated: 01/05/2024
+Last Updated: 04/01/2024
 License: MIT
 Program: WS2812B(neopixel) LED Strip Control Application for Raspberry Pi
 Description: This is a simple Python Flask application that controls an addressable RGB LED strip based on API requests.
