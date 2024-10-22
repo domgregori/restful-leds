@@ -54,16 +54,13 @@ app = Flask(__name__)
 
 # Define the LED strip configuration
 # TODO: YOU NEED TO SET THIS TO THE CORRECT NUMBER OF PIXELS IN YOUR STRIP
-NUM_PIXELS = 20
-DATA_PIN = board.D18
-pixels = neopixel.NeoPixel(DATA_PIN, NUM_PIXELS, auto_write=False)
+NUM_LEDS = 16
+spi = spidev.SpiDev()
+spi.open(0,0)
 
 # Global variables to control animations
 current_animation = None
 animation_active = False
-
-# Global variable to store the current brightness
-current_brightness = 255  # Default to maximum brightness
 
 
 ######################################
