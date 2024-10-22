@@ -87,27 +87,100 @@ def initial_flash():
 
 
 def set_color(color):
-    pixels.fill(color)
-    pixels.show()
+    ws2812.write2812(spi, [color]*NUM_LEDS)
 
 
 def turn_off():
-    pixels.fill((0, 0, 0))
-    pixels.show()
+    ws2812.write2812(spi, [0,0,0,]*NUM_LEDS)
 
 
 # This is the rainbow wave effect
 def rainbow_cycle(wait):
     global animation_active
     animation_active = True
+    l = [[0,0,0] * NUM_LEDS] 
     while animation_active:
         for j in range(255):
-            for i in range(NUM_PIXELS):
-                pixel_index = (i * 256 // NUM_PIXELS) + j
+            for i in range(NUM_LEDS):
+                pixel_index = (i * 256 // NUM_LEDS) + j
                 color = wheel(pixel_index & 255)
-                pixels[i] = color
-            pixels.show()
+                l[i] = color
+            ws2812.write2812(spi, l)
             time.sleep(wait)
+
+def fade(color, steps=100):
+    global animation_active
+    animation_active = True
+    reverse = False
+    i = 1
+    while animation_active:
+        l=[[x+i if x>0 else 0 for x in color]]*NUM_LEDS
+        ws2812.write2812(spi, l)
+        if reverse:
+            i -= 1
+        else:
+            i += 1
+        if i == steps:
+            reverse = True
+        elif i == 0:
+            reverse = False
+        time.sleep(.01)
+
+def circle(color):
+    global animation_active
+    animation_active = True
+    i = 0
+    while animation_active:
+        l = [color]*NUM_LEDS
+        l[(i+1)%NUM_LEDS] = [x*5 for x in color]
+        l[i%NUM_LEDS] = [x*5 for x in color]
+        l[(i-1)%NUM_LEDS] = [x*5 for x in color]
+        ws2812.write2812(spi, l)
+        i += 1
+        if i > NUM_LEDS:
+            i = 1
+        time.sleep(.1)
+
+def swivel(color):
+    global animation_active
+    animation_active = True
+    groups = 3
+    i = 0
+    rotate = 0
+    while animation_active:
+        l = [color]*NUM_LEDS
+        for n in range(NUM_LEDS):
+            if (i+n+rotate) % groups == 0:
+                l[n] = [x*5 for x in color]
+        ws2812.write2812(spi, l)
+        i += 1
+        if i >= (NUM_LEDS):
+            rotate -= 1
+            rotate *= rotate
+            i = 0
+        time.sleep(0.2)
+
+def random_bright(color, color2, ledsbright=3):
+    global animation_active
+    animation_active = True
+    choice = []
+    while animation_active:
+        l = [color]*NUM_LEDS
+        for i in range(ledsbright):
+            r = random.randrange(NUM_LEDS)
+            choice.append(r)
+        for c in choice:
+            l[c] = [x*5 for x in color2]
+
+        ws2812.write2812(spi, l)
+        choice = []
+        time.sleep(0.1)
+
+def percent_on(color, percent):
+    l = [[0,0,0]]*NUM-LEDS
+    for i in range(round(NUM_LEDS*(percent/100))):
+        l[i] = color
+    ws2812.write2812(spi, l)
 
 
 # Does the alternating colors animation by just calling set_color() with the specified colors
@@ -121,40 +194,12 @@ def alternating_colors(color1, color2):
         time.sleep(0.5)
 
 
-def set_brightness(brightness):
-    global current_brightness
-    current_brightness = brightness
-    pixels.brightness = brightness / 255.0  # Set the brightness between 0 and 1
-    pixels.show()
-
-
 def color_loop(colors):
-    global current_brightness, animation_active
+    global animation_active
     while animation_active:
         for color in colors:
-            set_brightness(current_brightness)
             set_color(color)
             time.sleep(1)
-
-
-def pulse_effect(color):
-    global current_brightness, animation_active
-    while animation_active:
-        for brightness in range(0, 256, 5):
-            if not animation_active:
-                set_brightness(255)  # Reset brightness to 100%
-                return  # Exit the function if animation is stopped
-            set_brightness(brightness)
-            set_color(color)
-            time.sleep(0.1)
-        for brightness in range(255, -1, -5):
-            if not animation_active:
-                set_brightness(255)  # Reset brightness to 100%
-                return  # Exit the function if animation is stopped
-            set_brightness(brightness)
-            set_color(color)
-            time.sleep(0.1)
-    set_brightness(255)  # Reset brightness to 100% after the pulse effect ends
 
 
 ######################################
@@ -213,7 +258,7 @@ def wheel(pos):
         r = 0
         g = int(pos * 3)
         b = int(255 - pos * 3)
-    return (r, g, b)
+    return [r, g, b]
 
 
 ######################################
@@ -266,8 +311,8 @@ def alternating_colors_endpoint():
     global current_animation, animation_active
     try:
         data = request.get_json()
-        color1 = tuple(data["color1"])
-        color2 = tuple(data["color2"])
+        color1 = data["color1"]
+        color2 = data["color2"]
         stop_current_animation()  # Stop any active animation
         animation_active = False  # Stop rainbow_wave animation
         current_animation = threading.Thread(
