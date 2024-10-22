@@ -436,7 +436,7 @@ def ping_endpoint():
 def help_endpoint():
     return jsonify(
         {
-            "message": "Here's the available endpoints. Note that all requests should be POST requests. All colors should be specified as RGB values, e.g., [255, 0, 0] for red. Set brightness values should be between 0 and 255 (like color values). The controller will always stay displaying the last color/effect/brightness until a new one is set.",
+            "message": "Here's the available endpoints. Note that all requests should be POST requests. All colors should be specified as RGB values, e.g., [255, 0, 0] for red. The controller will always stay displaying the last color/effect until a new one is set.",
             "endpoints": {
                 "/set_color": {
                     "description": "Sets the color of the LED strip",
@@ -523,4 +523,4 @@ if __name__ == "__main__":
     # Run the initial flash to show we are up and running
     initial_flash()
     # Start the Flask app and begin listening for endpoint requests
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="127.0.0.1", port=5060)
