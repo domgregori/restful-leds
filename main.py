@@ -359,19 +359,57 @@ def color_loop_endpoint():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-
-@app.route("/pulse_effect", methods=["POST"])
-def pulse_effect_endpoint():
+@app.route("/fade", methods=["POST"])
+def fade_endpoint():
     try:
         data = request.get_json()
-        color = tuple(
-            data["color"]
-        )  # Color should be a list of RGB values, e.g., [255, 0, 0] for red
-        start_pulse_effect(color)
-        return jsonify({"message": "Pulse effect started"})
+        color = data["color"]
+        steps = data["steps"]
+        start_color_loop(color, steps)
+        return jsonify({"message": "Fade started"})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route("/circle", methods=["POST"])
+def circle_endpoint():
+    try:
+        data = request.get_json()
+        color = data["color"]
+        start_circle(color)
+        return jsonify({"message": "Circle started"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/swivel", methods=["POST"])
+def swivel_endpoint():
+    try:
+        data = request.get_json()
+        color = data["color"]
+        start_swivel(color)
+        return jsonify({"message": "Swivel started"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/random_bright", methods=["POST"])
+def random_bright_endpoint():
+    try:
+        data = request.get_json()
+        color = data["color"]
+        start_random_bright(color, color2, ledbright)
+        return jsonify({"message": "Random Bright started"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/percent_on", methods=["POST"])
+def random_bright_endpoint():
+    try:
+        data = request.get_json()
+        color = data["color"]
+        percent = data["percent"]
+        start_percent_on(color, percent)
+        return jsonify({"message": "Percentage on"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 # Route for unknown requests
 @app.route("/", defaults={"path": ""})
@@ -419,9 +457,39 @@ def help_endpoint():
                         "color2": [0, 255, 0],  # Green
                     },
                 },
-                "/set_brightness": {
-                    "description": "Sets the brightness of the LED strip",
-                    "request body": {"brightness": 255},  # 100% brightness
+                "/fade": {
+                    "description": "Fade from bright to soft",
+                    "request body": {
+                        "color": [255, 0, 0],
+                        "steps": 100,
+                    },
+                },
+                "/circle": {
+                    "description": "A chasing circle",
+                    "request body": {
+                        "color": [255, 0, 0],
+                    },
+                },
+                "/swivel": {
+                    "description": "Back and forth animation",
+                    "request body": {
+                        "color": [255, 0, 0],
+                    },
+                },
+                "/random_bright": {
+                    "description": "Randomly brightens leds, like an 80s computer thinking",
+                    "request body": {
+                        "color": [255, 0, 0],
+                        "color2": [0, 255, 0],
+                        "ledsbright": 3,
+                    },
+                },
+                "/percent_on": {
+                    "description": "Percentage of leds on, for prgress",
+                    "request body": {
+                        "color": [255, 0, 0],
+                        "percent": 50,
+                    },
                 },
                 "/color_loop": {
                     "description": "Loops through the specified colors",
@@ -432,10 +500,6 @@ def help_endpoint():
                             [0, 0, 255],
                         ]  # Red, green, and blue
                     },
-                },
-                "/pulse_effect": {
-                    "description": "Starts a pulse effect with the specified color",
-                    "request body": {"color": [255, 0, 0]},  # Red
                 },
                 "/help": {
                     "description": "Returns documentation of available endpoints and how to use them (what you are seeing now)",
