@@ -71,12 +71,12 @@ animation_active = False
 # Helper function for the initial flash used at startup to indicate that the program is running
 def initial_flash():
     for _ in range(3):  # Flash green three times
-        set_color((0, 255, 0))
+        set_color([color]*NUM_LEDS)
         time.sleep(0.5)
         turn_off()
         time.sleep(0.5)
     # Flash blue once
-    set_color((0, 0, 255))
+    set_color([0, 0, 255]*NUM_LEDS)
     time.sleep(2)
     turn_off()  # light off until told otherwise by API request
 
