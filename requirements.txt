@@ -1,0 +1,3 @@
+flask
+spidev
+git+https://github.com/domgregori/ws2812-spi.git
