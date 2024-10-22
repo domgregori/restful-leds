@@ -215,15 +215,6 @@ def stop_current_animation():
         current_animation.join()
 
 
-# Start the pulse effect in a separate thread
-def start_pulse_effect(color):
-    global current_animation, animation_active
-    stop_current_animation()
-    animation_active = True
-    current_animation = threading.Thread(target=pulse_effect, args=(color,))
-    current_animation.daemon = True
-    current_animation.start()
-
 
 # Start the color loop in a separate thread
 def start_color_loop(colors):
@@ -234,6 +225,37 @@ def start_color_loop(colors):
     current_animation.daemon = True
     current_animation.start()
 
+def start_fade(color, steps=100):
+    global current_animation, animation_active
+    stop_current_animation()
+    animation_active = True
+    current_animation = threading.Thread(target=fade, args=(color,steps,))
+    current_animation.daemon = True
+    current_animation.start()
+
+def start_circle(color):
+    global current_animation, animation_active
+    stop_current_animation()
+    animation_active = True
+    current_animation = threading.Thread(target=circle, args=(color,))
+    current_animation.daemon = True
+    current_animation.start()
+
+def start_swivel(color):
+    global current_animation, animation_active
+    stop_current_animation()
+    animation_active = True
+    current_animation = threading.Thread(target=swivel, args=(color,))
+    current_animation.daemon = True
+    current_animation.start()
+
+def start_random_bright(color, color2, ledsbright):
+    global current_animation, animation_active
+    stop_current_animation()
+    animation_active = True
+    current_animation = threading.Thread(target=random_bright, args=(color, color2, ledsbright,))
+    current_animation.daemon = True
+    current_animation.start()
 
 # Helper function for the rainbow wave effect, this is used to generate a smooth sequence of color values for the rainbow wave
 # This function is taken from the Adafruit example code for the NeoPixel library: https://learn.adafruit.com/adafruit-neopixel-uberguide/python-circuitpython
@@ -321,17 +343,6 @@ def alternating_colors_endpoint():
         current_animation.daemon = True
         current_animation.start()
         return jsonify({"message": "Alternating colors activated"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
-
-@app.route("/set_brightness", methods=["POST"])
-def set_brightness_endpoint():
-    try:
-        data = request.get_json()
-        brightness = int(data["brightness"])  # Brightness should be between 0 and 255
-        set_brightness(brightness)
-        return jsonify({"message": "Brightness set successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
