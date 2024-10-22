@@ -14,7 +14,7 @@ Description: This is a simple Python Flask application that controls an addressa
               - /rainbow_wave: Starts a rainbow wave effect
                 -> no request body required
               - /alternating_colors: Alternates between the specified colors
-                -> Example request body: {"color1": [255, 0, 0], "color2": [0, 255, 0]} (for red and green)
+                -> Example request body: {"color": [255, 0, 0], "color2": [0, 255, 0]} (for red and green)
               - /color_loop: Loops through the specified colors
                 -> Example request body: {"colors": [[255, 0, 0], [0, 255, 0], [0, 0, 255]]} (for red, green, and blue)
               - /fade: Fade from bright to dim
@@ -54,7 +54,7 @@ app = Flask(__name__)
 
 # Define the LED strip configuration
 # TODO: YOU NEED TO SET THIS TO THE CORRECT NUMBER OF PIXELS IN YOUR STRIP
-NUM_LEDS = 16
+NUM_LEDS = 24
 spi = spidev.SpiDev()
 spi.open(1,0)
 
@@ -70,14 +70,14 @@ animation_active = False
 
 # Helper function for the initial flash used at startup to indicate that the program is running
 def initial_flash():
-    for _ in range(3):  # Flash green three times
-        set_color([63,0,0]*NUM_LEDS)
-        time.sleep(0.5)
+    for _ in range(2):  # Flash green three times
+        set_color([0,0,31])
+        time.sleep(0.3)
         turn_off()
-        time.sleep(0.5)
+        time.sleep(0.3)
     # Flash blue once
-    set_color([0, 0, 63]*NUM_LEDS)
-    time.sleep(2)
+    set_color([31, 0, 0])
+    time.sleep(1)
     turn_off()  # light off until told otherwise by API request
 
 
@@ -91,14 +91,14 @@ def set_color(color):
 
 
 def turn_off():
-    ws2812.write2812(spi, [0,0,0]*NUM_LEDS)
+    ws2812.write2812(spi, [[0,0,0]]*NUM_LEDS)
 
 
 # This is the rainbow wave effect
 def rainbow_cycle(wait):
     global animation_active
     animation_active = True
-    l = [[0,0,0] * NUM_LEDS] 
+    l = [[0,0,0]] * NUM_LEDS
     while animation_active:
         for j in range(255):
             for i in range(NUM_LEDS):
@@ -108,13 +108,14 @@ def rainbow_cycle(wait):
             ws2812.write2812(spi, l)
             time.sleep(wait)
 
-def fade(color, steps=100):
+def fade(color):
     global animation_active
     animation_active = True
     reverse = False
+    steps = 75
     i = 1
     while animation_active:
-        l=[x+i if x>0 else 0 for x in color]*NUM_LEDS
+        l=[[x+i if x>0 else 0 for x in color]]*NUM_LEDS
         ws2812.write2812(spi, l)
         if reverse:
             i -= 1
@@ -170,27 +171,26 @@ def random_bright(color, color2, ledsbright=3):
             r = random.randrange(NUM_LEDS)
             choice.append(r)
         for c in choice:
-            l[c] = [x*5 for x in color2]
-
+            l[c] = color2
         ws2812.write2812(spi, l)
         choice = []
-        time.sleep(0.1)
+        time.sleep(0.13)
 
 def percent_on(color, percent):
     global animation_active
     animation_active = True
-    l = [0,0,0]*NUM_LEDS
+    l = [[0,0,0]]*NUM_LEDS
     for i in range(round(NUM_LEDS*(percent/100))):
         l[i] = color
     ws2812.write2812(spi, l)
 
 
 # Does the alternating colors animation by just calling set_color() with the specified colors
-def alternating_colors(color1, color2):
+def alternating_colors(color, color2):
     global animation_active
     animation_active = True
     while animation_active:
-        set_color(color1)
+        set_color(color)
         time.sleep(0.5)
         set_color(color2)
         time.sleep(0.5)
@@ -227,11 +227,11 @@ def start_color_loop(colors):
     current_animation.daemon = True
     current_animation.start()
 
-def start_fade(color, steps=100):
+def start_fade(color):
     global current_animation, animation_active
     stop_current_animation()
     animation_active = True
-    current_animation = threading.Thread(target=fade, args=(color,steps,))
+    current_animation = threading.Thread(target=fade, args=(color,))
     current_animation.daemon = True
     current_animation.start()
 
@@ -302,9 +302,7 @@ def wheel(pos):
 def set_color_endpoint():
     try:
         data = request.get_json()
-        color = tuple(
-            data["color"]
-        )  # Color should be a list of RGB values, e.g., [255, 0, 0] for red
+        color = data["color"]
         stop_current_animation()  # Stop any active animation
         set_color(color)  # Set the new color
         return jsonify({"message": "Color set successfully"})
@@ -316,8 +314,8 @@ def set_color_endpoint():
 def turn_off_endpoint():
     try:
         stop_current_animation()
-        time.sleep(0.4)
-        turn_off()
+        #time.sleep(0.4)
+        #turn_off()
         time.sleep(0.1)
         turn_off()  # Doing it again to make sure (sometimes a color stays on)
         time.sleep(0.5)
@@ -343,12 +341,12 @@ def alternating_colors_endpoint():
     global current_animation, animation_active
     try:
         data = request.get_json()
-        color1 = data["color1"]
+        color = data["color"]
         color2 = data["color2"]
         stop_current_animation()  # Stop any active animation
         animation_active = False  # Stop rainbow_wave animation
         current_animation = threading.Thread(
-            target=alternating_colors, args=(color1, color2)
+            target=alternating_colors, args=(color, color2)
         )
         current_animation.daemon = True
         current_animation.start()
@@ -361,9 +359,7 @@ def alternating_colors_endpoint():
 def color_loop_endpoint():
     try:
         data = request.get_json()
-        colors = [
-            tuple(color) for color in data["colors"]
-        ]  # List of colors to loop through
+        colors = data["colors"]
         start_color_loop(colors)
         return jsonify({"message": "Color loop started"})
     except Exception as e:
@@ -374,7 +370,7 @@ def fade_endpoint():
     try:
         data = request.get_json()
         color = data["color"]
-        start_color_loop(color,)
+        start_fade(color,)
         return jsonify({"message": "Fade started"})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -405,7 +401,7 @@ def random_bright_endpoint():
         data = request.get_json()
         color = data["color"]
         color2 = data["color2"]
-        ledsbright = data["ledsbright"]
+        ledsbright = int(data["ledsbright"])
         start_random_bright(color, color2, ledsbright)
         return jsonify({"message": "Random Bright started"})
     except Exception as e:
@@ -416,7 +412,7 @@ def percent_on_endpoint():
     try:
         data = request.get_json()
         color = data["color"]
-        percent = data["percent"]
+        percent = int(data["percent"])
         start_percent_on(color, percent)
         return jsonify({"message": "Percentage on"})
     except Exception as e:
@@ -464,7 +460,7 @@ def help_endpoint():
                 "/alternating_colors": {
                     "description": "Alternates between the specified colors",
                     "request body": {
-                        "color1": [255, 0, 0],  # Red
+                        "color": [255, 0, 0],  # Red
                         "color2": [0, 255, 0],  # Green
                     },
                 },
@@ -472,7 +468,6 @@ def help_endpoint():
                     "description": "Fade from bright to soft",
                     "request body": {
                         "color": [255, 0, 0],
-                        "steps": 100,
                     },
                 },
                 "/circle": {
@@ -534,4 +529,4 @@ if __name__ == "__main__":
     # Run the initial flash to show we are up and running
     initial_flash()
     # Start the Flask app and begin listening for endpoint requests
-    app.run(host="127.0.0.1", port=5060)
+    app.run(host="0.0.0.0", port=5060)
