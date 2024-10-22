@@ -15,15 +15,21 @@ Description: This is a simple Python Flask application that controls an addressa
                 -> no request body required
               - /alternating_colors: Alternates between the specified colors
                 -> Example request body: {"color1": [255, 0, 0], "color2": [0, 255, 0]} (for red and green)
-              - /set_brightness: Sets the brightness of the LED strip
-                -> Example request body: {"brightness": 100} (for 100% brightness)
               - /color_loop: Loops through the specified colors
                 -> Example request body: {"colors": [[255, 0, 0], [0, 255, 0], [0, 0, 255]]} (for red, green, and blue)
-              - /pulse_effect: Starts a pulse effect with the specified color
-                -> Example request body: {"color": [255, 0, 0]} (for red)
+              - /fade: Fade from bright to dim
+                -> Example request body: {"color": [255, 0, 0]}
+              - /circle: Circle chasing animation
+                -> Example request body: {"color": [255, 0, 0]}
+              - /swivel: Back and forth animation
+                -> Example request body: {"color": [255, 0, 0]}
+              - /random_bright: 80s computer thinking animation
+                -> Example request body: {"color": [255, 0, 0], "color2": [0,255,0], "ledsbright": 3}
+              - /percent_on: Percentage of leds on, for progress
+                -> Example request body: {"color": [255, 0, 0], "percent": 50}
               - /help: Returns documentation of available endpoints and how to use them
 Note: 
-The standard behavior is that the strip will continue to always display the last color/effect/brightness until a new one is set.
+The standard behavior is that the strip will continue to always display the last color/effect until a new one is set.
 There are no time outs, temporary effects, or anything like that. You want it off after a certain amount of time? Send a request to turn it off at that time.
 """
 
@@ -31,10 +37,11 @@ There are no time outs, temporary effects, or anything like that. You want it of
 #              Imports               #
 ######################################
 
-import board
-import neopixel
+import spidev
+import ws2812
 from flask import Flask, request, jsonify
 import time
+import random
 import threading
 
 
