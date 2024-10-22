@@ -56,7 +56,7 @@ app = Flask(__name__)
 # TODO: YOU NEED TO SET THIS TO THE CORRECT NUMBER OF PIXELS IN YOUR STRIP
 NUM_LEDS = 16
 spi = spidev.SpiDev()
-spi.open(0,0)
+spi.open(1,0)
 
 # Global variables to control animations
 current_animation = None
@@ -71,12 +71,12 @@ animation_active = False
 # Helper function for the initial flash used at startup to indicate that the program is running
 def initial_flash():
     for _ in range(3):  # Flash green three times
-        set_color([color]*NUM_LEDS)
+        set_color([63,0,0]*NUM_LEDS)
         time.sleep(0.5)
         turn_off()
         time.sleep(0.5)
     # Flash blue once
-    set_color([0, 0, 255]*NUM_LEDS)
+    set_color([0, 0, 63]*NUM_LEDS)
     time.sleep(2)
     turn_off()  # light off until told otherwise by API request
 
@@ -91,7 +91,7 @@ def set_color(color):
 
 
 def turn_off():
-    ws2812.write2812(spi, [0,0,0,]*NUM_LEDS)
+    ws2812.write2812(spi, [0,0,0]*NUM_LEDS)
 
 
 # This is the rainbow wave effect
@@ -114,7 +114,7 @@ def fade(color, steps=100):
     reverse = False
     i = 1
     while animation_active:
-        l=[[x+i if x>0 else 0 for x in color]]*NUM_LEDS
+        l=[x+i if x>0 else 0 for x in color]*NUM_LEDS
         ws2812.write2812(spi, l)
         if reverse:
             i -= 1
@@ -177,7 +177,9 @@ def random_bright(color, color2, ledsbright=3):
         time.sleep(0.1)
 
 def percent_on(color, percent):
-    l = [[0,0,0]]*NUM-LEDS
+    global animation_active
+    animation_active = True
+    l = [0,0,0]*NUM_LEDS
     for i in range(round(NUM_LEDS*(percent/100))):
         l[i] = color
     ws2812.write2812(spi, l)
@@ -254,6 +256,14 @@ def start_random_bright(color, color2, ledsbright):
     stop_current_animation()
     animation_active = True
     current_animation = threading.Thread(target=random_bright, args=(color, color2, ledsbright,))
+    current_animation.daemon = True
+    current_animation.start()
+
+def start_percent_on(color, percent):
+    global current_animation, animation_active
+    stop_current_animation()
+    animation_active = True
+    current_animation = threading.Thread(target=percent_on, args=(color, percent,))
     current_animation.daemon = True
     current_animation.start()
 
@@ -364,8 +374,7 @@ def fade_endpoint():
     try:
         data = request.get_json()
         color = data["color"]
-        steps = data["steps"]
-        start_color_loop(color, steps)
+        start_color_loop(color,)
         return jsonify({"message": "Fade started"})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -395,13 +404,15 @@ def random_bright_endpoint():
     try:
         data = request.get_json()
         color = data["color"]
-        start_random_bright(color, color2, ledbright)
+        color2 = data["color2"]
+        ledsbright = data["ledsbright"]
+        start_random_bright(color, color2, ledsbright)
         return jsonify({"message": "Random Bright started"})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 @app.route("/percent_on", methods=["POST"])
-def random_bright_endpoint():
+def percent_on_endpoint():
     try:
         data = request.get_json()
         color = data["color"]
